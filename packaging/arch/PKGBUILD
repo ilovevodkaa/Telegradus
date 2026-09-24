@@ -13,9 +13,11 @@ arch=('x86_64')
 url='https://github.com/ilovevodkaa/Telegradus'
 license=('GPL-3.0-only')
 # The UI loads its windowing/graphics libraries at runtime (dlopen).
+# The prebuilt libtdjson that tdlib-rs downloads is built against LLVM's libc++.
 depends=(
   'gcc-libs'
   'glibc'
+  'libc++'
   'libx11'
   'libxcursor'
   'libxi'

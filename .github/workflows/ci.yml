@@ -69,6 +69,11 @@ jobs:
       - name: Test
         run: cargo test --workspace --locked
 
+      # End to end against the real TDLib, no account needed: reaches the
+      # phone-number step, logs out, restarts and shuts down cleanly.
+      - name: TDLib smoke test
+        run: cargo test -p telegradus-core --locked -- --ignored
+
       # JSON messages tell us where tdlib-rs unpacked TDLib (its OUT_DIR).
       - name: Build release
         shell: bash
