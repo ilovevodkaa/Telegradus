@@ -87,10 +87,7 @@ impl Actor {
         if let Err(err) = result {
             // TDLib still waits for parameters.
             self.phase = Phase::WaitParameters;
-            self.emit_error(ErrorContext::Auth, &err);
-            if is_api_credentials_error(&err.message) {
-                self.emit(Event::Auth(AuthState::NeedApiCredentials));
-            }
+            self.report_auth_error(&err);
         }
     }
 
@@ -200,11 +197,17 @@ impl Actor {
 
     pub(super) fn on_auth_result(&mut self, result: Result<(), types::Error>) {
         if let Err(err) = result {
-            self.emit_error(ErrorContext::Auth, &err);
-            if is_api_credentials_error(&err.message) {
-                self.emit(Event::Auth(AuthState::NeedApiCredentials));
-            }
+            self.report_auth_error(&err);
         }
+    }
+
+    /// Reports a failed login request. Rejected credentials send the UI back to
+    /// the setup form first, so the error that follows is shown on that form.
+    fn report_auth_error(&self, err: &types::Error) {
+        if is_api_credentials_error(&err.message) {
+            self.emit(Event::Auth(AuthState::NeedApiCredentials));
+        }
+        self.emit_error(ErrorContext::Auth, err);
     }
 
     pub(super) fn submit_phone_number(&mut self, phone: String) {

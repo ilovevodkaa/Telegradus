@@ -302,3 +302,30 @@ fn updates_of_other_clients_are_ignored() {
         .unwrap();
     assert!(h.process().is_empty());
 }
+
+#[test]
+fn rejected_credentials_reopen_the_setup_form_before_the_error() {
+    let mut h = Harness::new();
+    h.actor.on_auth_result(Err(types::Error {
+        code: 400,
+        message: "API_ID_INVALID".to_owned(),
+    }));
+    let events = h.process();
+    // The UI switches to the setup form first, then shows the error on it.
+    assert!(
+        matches!(
+            &events[..],
+            [Event::Auth(crate::AuthState::NeedApiCredentials), Event::Error(error)]
+                if error.context == crate::ErrorContext::Auth
+        ),
+        "{events:?}"
+    );
+
+    // Other login errors leave the current step as it is.
+    h.actor.on_auth_result(Err(types::Error {
+        code: 400,
+        message: "PHONE_CODE_INVALID".to_owned(),
+    }));
+    let events = h.process();
+    assert!(matches!(&events[..], [Event::Error(_)]), "{events:?}");
+}
