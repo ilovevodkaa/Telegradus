@@ -13,6 +13,7 @@
 ![Rust](https://img.shields.io/badge/Rust-0b0b0c?style=flat-square&logo=rust&logoColor=white)
 ![Arch Linux](https://img.shields.io/badge/Arch_Linux-0b0b0c?style=flat-square&logo=archlinux&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-0b0b0c?style=flat-square&logo=windows&logoColor=white)
+![Лицензия](https://img.shields.io/badge/лицензия-GPL--3.0-74747c?style=flat-square&labelColor=0b0b0c)
 
 [Зачем](#-зачем-ещё-один-клиент) •
 [Возможности](#-возможности) •
@@ -262,6 +263,12 @@ Electron тащит с собой целый Chromium и легко съедае
 
 Проект только начинается — самое время присоединиться! Идеи, баг-репорты и пул-реквесты приветствуются
 в [Issues](https://github.com/ilovevodkaa/Telegradus/issues).
+
+## 📄 Лицензия
+
+Telegradus распространяется под лицензией [GNU GPL v3.0](LICENSE).
+Можно свободно использовать, изучать, изменять и распространять код — при условии, что производные работы
+тоже остаются открытыми под GPL-3.0.
 
 ---
 
