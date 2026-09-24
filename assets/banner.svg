@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-label="Telegradus — быстрый нативный клиент Telegram">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f24"/>
+      <stop offset="1" stop-color="#171c46"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="0.5" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c7d2fe"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#ffffff" fill-opacity="0.06"/>
+    </pattern>
+    <clipPath id="frame">
+      <rect width="1280" height="360" rx="28"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="360" fill="url(#bg)"/>
+    <rect width="1280" height="360" fill="url(#dots)"/>
+    <circle cx="250" cy="180" r="260" fill="url(#glowA)"/>
+    <circle cx="1150" cy="40" r="300" fill="url(#glowB)"/>
+
+    <!-- speed lines -->
+    <g stroke="#7dd3fc" stroke-linecap="round" opacity="0.5">
+      <line x1="60" y1="120" x2="130" y2="120" stroke-width="4"/>
+      <line x1="40" y1="160" x2="125" y2="160" stroke-width="4"/>
+      <line x1="75" y1="200" x2="128" y2="200" stroke-width="4"/>
+    </g>
+
+    <!-- app icon -->
+    <g transform="translate(150 80)">
+      <rect width="200" height="200" rx="52" fill="url(#accent)"/>
+      <rect width="200" height="200" rx="52" fill="#ffffff" fill-opacity="0.06"/>
+      <!-- paper plane -->
+      <path d="M34 98 L166 44 L134 160 L100 126 Z" fill="#ffffff"/>
+      <path d="M166 44 L100 126 L92 158 L84 116 Z" fill="#e0e7ff"/>
+      <!-- degree mark: the "gradus" -->
+      <circle cx="160" cy="150" r="15" fill="none" stroke="#ffffff" stroke-width="8"/>
+    </g>
+
+    <!-- wordmark -->
+    <text x="400" y="190" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="104" font-weight="800" letter-spacing="-2" fill="url(#title)">Telegradus</text>
+    <text x="404" y="246" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="500" fill="#a5b4fc">Быстрый нативный клиент Telegram для Linux и Windows</text>
+
+    <!-- chips -->
+    <g font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600">
+      <rect x="404" y="274" width="112" height="38" rx="19" fill="#ffffff" fill-opacity="0.08" stroke="#5eead4" stroke-opacity="0.6"/>
+      <text x="460" y="300" text-anchor="middle" fill="#5eead4">Rust</text>
+      <rect x="528" y="274" width="150" height="38" rx="19" fill="#ffffff" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.6"/>
+      <text x="603" y="300" text-anchor="middle" fill="#7dd3fc">Без Electron</text>
+      <rect x="690" y="274" width="170" height="38" rx="19" fill="#ffffff" fill-opacity="0.08" stroke="#a78bfa" stroke-opacity="0.6"/>
+      <text x="775" y="300" text-anchor="middle" fill="#c4b5fd">Приватность</text>
+    </g>
+  </g>
+</svg>
