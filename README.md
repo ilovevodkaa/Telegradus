@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="Telegradus — быстрый нативный клиент Telegram для Linux и Windows" width="100%">
+<img src="assets/banner.svg" alt="_Telegradus — быстрый нативный клиент Telegram для Linux и Windows" width="100%">
 
 <br>
 
@@ -9,10 +9,10 @@
 
 <br>
 
-![Статус](https://img.shields.io/badge/статус-в_разработке-f59e0b?style=for-the-badge)
-![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
-![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793D1?style=for-the-badge&logo=archlinux&logoColor=white)
-![Windows](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)
+![Статус](https://img.shields.io/badge/статус-в_разработке-74747c?style=flat-square&labelColor=0b0b0c)
+![Rust](https://img.shields.io/badge/Rust-0b0b0c?style=flat-square&logo=rust&logoColor=white)
+![Arch Linux](https://img.shields.io/badge/Arch_Linux-0b0b0c?style=flat-square&logo=archlinux&logoColor=white)
+![Windows](https://img.shields.io/badge/Windows-0b0b0c?style=flat-square&logo=windows&logoColor=white)
 
 [Зачем](#-зачем-ещё-один-клиент) •
 [Возможности](#-возможности) •
