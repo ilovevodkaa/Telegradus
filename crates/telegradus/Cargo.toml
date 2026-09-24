@@ -1,0 +1,16 @@
+[package]
+name = "telegradus"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = ["download-tdlib"]
+download-tdlib = ["telegradus-core/download-tdlib"]
+local-tdlib = ["telegradus-core/local-tdlib"]
+pkg-config = ["telegradus-core/pkg-config"]
+
+[dependencies]
+telegradus-core.workspace = true
+iced = { workspace = true, features = ["wgpu", "tiny-skia", "tokio", "image", "qr_code", "advanced", "x11", "wayland", "thread-pool"] }
+tracing.workspace = true

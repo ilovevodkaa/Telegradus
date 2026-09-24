@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = ["crates/telegradus-core", "crates/telegradus"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "GPL-3.0-only"
+repository = "https://github.com/ilovevodkaa/Telegradus"
+
+[workspace.dependencies]
+telegradus-core = { path = "crates/telegradus-core", default-features = false }
+tdlib-rs = "1.4"
+iced = { version = "0.14", default-features = false }
+tokio = { version = "1", default-features = false }
+tracing = "0.1"
