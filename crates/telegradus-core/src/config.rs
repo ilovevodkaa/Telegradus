@@ -295,12 +295,15 @@ mod tests {
         assert_eq!(config.data_dir, PathBuf::from("/default"));
         assert!(!config.use_test_dc);
 
+        // `/tmp/tg` is not absolute on Windows, so use a platform-absolute path.
+        let dir = std::env::temp_dir().join("tg");
+        let dir_str = dir.to_str().expect("temp dir is valid UTF-8");
         let config = resolve_with(
-            &[(ENV_DATA_DIR, "/tmp/tg"), (ENV_TEST_DC, "1")],
+            &[(ENV_DATA_DIR, dir_str), (ENV_TEST_DC, "1")],
             Sources::default(),
             None,
         );
-        assert_eq!(config.data_dir, PathBuf::from("/tmp/tg"));
+        assert_eq!(config.data_dir, dir);
         assert!(config.use_test_dc);
 
         let config = resolve_with(
