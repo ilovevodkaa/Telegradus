@@ -15,3 +15,15 @@ tdlib-rs = "1.4"
 iced = { version = "0.14", default-features = false }
 tokio = { version = "1", default-features = false }
 tracing = "0.1"
+
+# Debug builds: our crates stay quick to rebuild, while dependencies (iced,
+# wgpu, image decoders, TDLib bindings) are optimized once so the UI is smooth.
+[profile.dev.package."*"]
+opt-level = 2
+
+# Small, fast release binary. Panics still unwind (the default).
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true

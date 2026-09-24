@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request cancels the running check.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
+  # TDLib version the tdlib-rs bindings are generated for (and ship with).
+  TDLIB_VERSION: 1.8.61
+
+jobs:
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all --check
+
+  check:
+    name: Check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      # The prebuilt libtdjson from tdlib-rs is built against LLVM's libc++.
+      # iced itself needs no system packages: it dlopens X11, Wayland and Vulkan.
+      - name: Install libc++ (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libc++1 libc++abi1
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked --features telegradus/demo -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace --locked
+
+      # JSON messages tell us where tdlib-rs unpacked TDLib (its OUT_DIR).
+      - name: Build release
+        shell: bash
+        run: |
+          mkdir -p target
+          cargo build --release --locked -p telegradus \
+            --message-format=json-render-diagnostics > target/cargo-build.jsonl
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          out_dir=$(jq -r 'select(.reason == "build-script-executed"
+                                  and (.package_id | test("#tdlib-rs@")))
+                           | .out_dir' target/cargo-build.jsonl | tail -n 1)
+          tdjson="$out_dir/tdlib/lib/libtdjson.so.$TDLIB_VERSION"
+          test -f "$tdjson" || { echo "::error::$tdjson not found"; exit 1; }
+
+          pkg=dist/telegradus
+          mkdir -p "$pkg"
+          cp target/release/telegradus README.md LICENSE "$pkg/"
+          cp crates/telegradus/assets/fonts/OFL-*.txt "$pkg/"
+          cp -L "$tdjson" "$pkg/"
+
+          # The binary must resolve libtdjson next to itself via its $ORIGIN rpath.
+          deps=$(ldd "$PWD/$pkg/telegradus")
+          echo "$deps"
+          if ! grep -qF "=> $PWD/$pkg/libtdjson.so.$TDLIB_VERSION" <<<"$deps"; then
+            echo "::error::telegradus does not load libtdjson from its own directory"
+            exit 1
+          fi
+          if grep -q 'not found' <<<"$deps"; then
+            echo "::error::unresolved shared libraries"
+            exit 1
+          fi
+
+          archive=dist/telegradus-linux-x86_64.tar.gz
+          tar -C dist -czf "$archive" telegradus
+          echo "ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $message = Get-Content target/cargo-build.jsonl |
+            Where-Object { $_ -like '*"reason":"build-script-executed"*' -and $_ -like '*#tdlib-rs@*' } |
+            Select-Object -Last 1 |
+            ConvertFrom-Json
+          if (-not $message) { throw 'tdlib-rs build script output not found' }
+          $bin = Join-Path $message.out_dir 'tdlib/bin'
+          $dlls = @(Get-ChildItem -Path $bin -Filter *.dll)
+          if ($dlls.Name -notcontains 'tdjson.dll') { throw "tdjson.dll not found in $bin" }
+
+          $pkg = 'dist/telegradus'
+          New-Item -ItemType Directory -Force -Path $pkg | Out-Null
+          Copy-Item -Path target/release/telegradus.exe, README.md, LICENSE -Destination $pkg
+          Copy-Item -Path crates/telegradus/assets/fonts/OFL-*.txt -Destination $pkg
+          $dlls | Copy-Item -Destination $pkg
+          Get-ChildItem $pkg | Format-Table Name, Length
+
+          $archive = 'dist/telegradus-windows-x86_64.zip'
+          Compress-Archive -Path $pkg -DestinationPath $archive -Force
+          "ARCHIVE=$archive" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # Uploaded as-is (no extra zip layer), so the Linux tarball keeps its permissions.
+      - name: Upload package
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ env.ARCHIVE }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+          overwrite: true
