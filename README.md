@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="_Telegradus — быстрый нативный клиент Telegram для Linux и Windows" width="100%">
+<img src="assets/banner.webp" alt="_Telegradus — быстрый нативный клиент Telegram для Linux и Windows" width="100%">
 
 <br>
 
