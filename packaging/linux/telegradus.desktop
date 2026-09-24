@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Telegradus
+GenericName=Telegram Client
+GenericName[ru]=Клиент Telegram
+Comment=Fast native Telegram desktop client
+Comment[ru]=Быстрый нативный клиент Telegram
+Exec=telegradus
+Icon=telegradus
+Terminal=false
+Categories=Network;InstantMessaging;Chat;
+Keywords=telegram;messenger;chat;
+Keywords[ru]=telegram;телеграм;мессенджер;чат;
+StartupNotify=true
+StartupWMClass=telegradus

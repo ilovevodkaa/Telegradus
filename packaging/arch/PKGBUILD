@@ -1,0 +1,88 @@
+# Maintainer: ilovevodkaa <https://github.com/ilovevodkaa>
+#
+# Builds Telegradus from the latest commit.
+# Optional: export TELEGRADUS_API_ID / TELEGRADUS_API_HASH before makepkg to bake
+# your Telegram API credentials into the binary; otherwise the app asks for them
+# on first launch.
+
+pkgname=telegradus-git
+pkgver=r0
+pkgrel=1
+pkgdesc='Fast, low-memory native Telegram desktop client'
+arch=('x86_64')
+url='https://github.com/ilovevodkaa/Telegradus'
+license=('GPL-3.0-only')
+# The UI loads its windowing/graphics libraries at runtime (dlopen).
+depends=(
+  'gcc-libs'
+  'glibc'
+  'libx11'
+  'libxcursor'
+  'libxi'
+  'libxkbcommon'
+  'libxkbcommon-x11'
+  'libxrandr'
+  'openssl'
+  'wayland'
+  'zlib'
+)
+optdepends=(
+  'vulkan-icd-loader: GPU rendering through Vulkan (falls back to OpenGL or software)'
+)
+makedepends=('cargo' 'git')
+provides=('telegradus')
+conflicts=('telegradus')
+source=("telegradus::git+${url}.git")
+sha256sums=('SKIP')
+
+# TDLib's C API version the bindings are generated for.
+_tdlib=1.8.61
+
+pkgver() {
+  cd telegradus
+  printf 'r%s.%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+prepare() {
+  cd telegradus
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd telegradus
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  # The default `download-tdlib` feature fetches the matching prebuilt TDLib.
+  cargo build --frozen --release -p telegradus
+}
+
+package() {
+  cd telegradus
+
+  local tdjson
+  tdjson=$(find target/release/build -path "*/out/tdlib/lib/libtdjson.so.${_tdlib}" -print -quit)
+  [[ -n $tdjson ]] || { echo "libtdjson.so.${_tdlib} not found" >&2; return 1; }
+
+  # The binary looks for libtdjson next to itself ($ORIGIN rpath).
+  install -Dm755 target/release/telegradus "$pkgdir/usr/lib/telegradus/telegradus"
+  install -Dm644 "$tdjson" "$pkgdir/usr/lib/telegradus/libtdjson.so.${_tdlib}"
+  install -d "$pkgdir/usr/bin"
+  ln -s /usr/lib/telegradus/telegradus "$pkgdir/usr/bin/telegradus"
+
+  install -Dm644 packaging/linux/telegradus.desktop \
+    "$pkgdir/usr/share/applications/telegradus.desktop"
+  install -Dm644 crates/telegradus/assets/icon/telegradus.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/telegradus.svg"
+  local size
+  for size in 16 24 32 48 64 128 256 512; do
+    install -Dm644 "crates/telegradus/assets/icon/png/telegradus-${size}.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/telegradus.png"
+  done
+
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 crates/telegradus/assets/fonts/OFL-InterTight.txt \
+    "$pkgdir/usr/share/licenses/$pkgname/OFL-InterTight.txt"
+  install -Dm644 crates/telegradus/assets/fonts/OFL-JetBrainsMono.txt \
+    "$pkgdir/usr/share/licenses/$pkgname/OFL-JetBrainsMono.txt"
+}
