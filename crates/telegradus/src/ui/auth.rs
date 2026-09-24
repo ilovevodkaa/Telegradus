@@ -4,12 +4,12 @@ use std::time::{Duration, Instant};
 
 use iced::widget::{Space, button, column, container, operation, qr_code, row, text, text_input};
 use iced::{Alignment, Element, Length, Padding, Task};
-use telegradus_core::{AuthState, CodeInfo, CodeKind, Command};
+use telegradus_core::{AuthState, CodeInfo, CodeKind, Command, ConnectionState};
 
 use crate::app::Message;
 use crate::format;
 use crate::theme::{self, MONO, SANS_MEDIUM, SANS_SEMIBOLD};
-use crate::ui::widgets::{mono, wordmark};
+use crate::ui::widgets::{self, mono, wordmark};
 
 const API_SITE: &str = "https://my.telegram.org/apps";
 /// The first input of every login step, focused when the step appears.
@@ -202,7 +202,11 @@ impl Form {
 }
 
 /// The login flow screen for the current state.
-pub fn view<'a>(form: &'a Form, state: &'a AuthState) -> Element<'a, Message> {
+pub fn view<'a>(
+    form: &'a Form,
+    state: &'a AuthState,
+    connection: ConnectionState,
+) -> Element<'a, Message> {
     let card: Element<'a, Message> = if form.force_phone {
         phone(form)
     } else {
@@ -220,18 +224,29 @@ pub fn view<'a>(form: &'a Form, state: &'a AuthState) -> Element<'a, Message> {
                 "Вход по почте",
                 "Telegram просит подтвердить вход через электронную почту. Этот способ пока не поддерживается — попробуйте войти по QR-коду.",
             ),
-            AuthState::Initializing | AuthState::Ready => loading("Подключаемся к Telegram…"),
-            AuthState::LoggingOut => loading("Выходим из аккаунта…"),
-            AuthState::Closing | AuthState::Closed => loading("Завершаем работу…"),
+            AuthState::Initializing | AuthState::Ready => {
+                loading("Подключаемся к Telegram…", form.error.as_deref())
+            }
+            AuthState::LoggingOut => loading("Выходим из аккаунта…", form.error.as_deref()),
+            AuthState::Closing | AuthState::Closed => {
+                loading("Завершаем работу…", form.error.as_deref())
+            }
         }
     };
-    frame(card)
+    // A request that hangs offline otherwise looks like a frozen form.
+    let footer = if form.pending && connection != ConnectionState::Ready {
+        widgets::connection(connection)
+    } else {
+        mono("свободный клиент Telegram · GPL-3.0", 11.0)
+            .style(theme::text_muted)
+            .into()
+    };
+    frame(card, footer)
 }
 
 /// Page background, wordmark, card and footer.
-fn frame(card: Element<'_, Message>) -> Element<'_, Message> {
+fn frame<'a>(card: Element<'a, Message>, footer: Element<'a, Message>) -> Element<'a, Message> {
     let header = container(wordmark(22.0)).padding(Padding::default().bottom(4));
-    let footer = mono("свободный клиент Telegram · GPL-3.0", 11.0).style(theme::text_muted);
     let content = column![
         header,
         container(card)
@@ -553,14 +568,29 @@ fn unsupported<'a>(heading: &'a str, body: &'a str) -> Element<'a, Message> {
     .into()
 }
 
-fn loading(label: &str) -> Element<'_, Message> {
-    column![
-        mono("● ● ●", 12.0).style(theme::text_muted),
-        text(label).size(16).font(SANS_MEDIUM),
-        mono("это займёт пару секунд", 11.0).style(theme::text_muted),
-    ]
-    .spacing(10)
-    .align_x(Alignment::Center)
-    .width(Length::Fill)
-    .into()
+/// A waiting card; `error` replaces the hint when the step failed (for
+/// example, when another instance holds the database).
+fn loading<'a>(label: &'a str, error: Option<&'a str>) -> Element<'a, Message> {
+    // The dots promise progress, so they go away with an error.
+    let (dots, hint): (Option<Element<'a, Message>>, Element<'a, Message>) = match error {
+        Some(message) => (
+            None,
+            text(message)
+                .size(13)
+                .align_x(Alignment::Center)
+                .style(theme::text_danger)
+                .into(),
+        ),
+        None => (
+            Some(mono("● ● ●", 12.0).style(theme::text_muted).into()),
+            mono("это займёт пару секунд", 11.0)
+                .style(theme::text_muted)
+                .into(),
+        ),
+    };
+    column![dots, text(label).size(16).font(SANS_MEDIUM), hint]
+        .spacing(10)
+        .align_x(Alignment::Center)
+        .width(Length::Fill)
+        .into()
 }

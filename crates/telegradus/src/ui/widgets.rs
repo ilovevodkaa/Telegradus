@@ -3,6 +3,7 @@
 use iced::widget::text::Span;
 use iced::widget::{Space, button, container, image, rich_text, row, span, stack, text};
 use iced::{Alignment, Color, Element, Font, Length, Never, Padding, never};
+use telegradus_core::ConnectionState;
 
 use crate::app::Message;
 use crate::state::chats::Chat;
@@ -25,6 +26,27 @@ pub fn wordmark<'a>(size: f32) -> Element<'a, Message> {
     .spacing(size * 0.08)
     .align_y(Alignment::End)
     .into()
+}
+
+/// A colored dot and a short label for the TDLib connection state.
+pub fn connection<'a>(state: ConnectionState) -> Element<'a, Message> {
+    let (label, color): (&str, fn(&theme::Palette) -> iced::Color) = match state {
+        ConnectionState::Ready => ("в сети", |p| p.success),
+        ConnectionState::Updating => ("обновление…", |p| p.warning),
+        ConnectionState::Connecting | ConnectionState::ConnectingToProxy => {
+            ("соединение…", |p| p.warning)
+        }
+        ConnectionState::WaitingForNetwork => ("нет сети", |p| p.danger),
+    };
+    let dot = container(Space::new().width(7).height(7)).style(move |theme| container::Style {
+        background: Some(color(theme::palette(theme)).into()),
+        border: iced::border::rounded(999),
+        ..container::Style::default()
+    });
+    row![dot, mono(label, 11.0).style(theme::text_muted)]
+        .spacing(7)
+        .align_y(Alignment::Center)
+        .into()
 }
 
 /// Appends `content` as spans, giving emoji runs the color emoji font.

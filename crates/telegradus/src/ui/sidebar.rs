@@ -5,14 +5,14 @@ use iced::widget::{
     Column, Space, button, column, container, rich_text, row, scrollable, span, text,
 };
 use iced::{Alignment, Element, Length, Padding, never};
-use telegradus_core::{ChatListEntry, ChatListId, ConnectionState};
+use telegradus_core::{ChatListEntry, ChatListId};
 
 use crate::app::{App, CHAT_LIST_ID, CHAT_ROW_HEIGHT, Message};
 use crate::format;
 use crate::state::chats::Chat;
 use crate::theme::{self, MONO, SANS, SANS_MEDIUM, SANS_SEMIBOLD};
 use crate::ui::icons::{self, Icon, Tint};
-use crate::ui::widgets::{self, mono, wordmark};
+use crate::ui::widgets::{self, connection, mono, wordmark};
 use crate::virtual_list;
 
 /// Rows built beyond the viewport on each side.
@@ -41,26 +41,6 @@ pub fn view(app: &App) -> Element<'_, Message> {
         footer(app),
     ]
     .into()
-}
-
-fn connection<'a>(state: ConnectionState) -> Element<'a, Message> {
-    let (label, color): (&str, fn(&theme::Palette) -> iced::Color) = match state {
-        ConnectionState::Ready => ("в сети", |p| p.success),
-        ConnectionState::Updating => ("обновление…", |p| p.warning),
-        ConnectionState::Connecting | ConnectionState::ConnectingToProxy => {
-            ("соединение…", |p| p.warning)
-        }
-        ConnectionState::WaitingForNetwork => ("нет сети", |p| p.danger),
-    };
-    let dot = container(Space::new().width(7).height(7)).style(move |theme| container::Style {
-        background: Some(color(theme::palette(theme)).into()),
-        border: iced::border::rounded(999),
-        ..container::Style::default()
-    });
-    row![dot, mono(label, 11.0).style(theme::text_muted)]
-        .spacing(7)
-        .align_y(Alignment::Center)
-        .into()
 }
 
 fn folders(app: &App) -> Element<'_, Message> {

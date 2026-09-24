@@ -20,7 +20,7 @@ pub const SIDEBAR_WIDTH: f32 = 320.0;
 pub fn view(app: &App) -> Element<'_, Message> {
     let content = match app.auth {
         AuthState::Ready => main(app),
-        _ => auth::view(&app.auth_form, &app.auth),
+        _ => auth::view(&app.auth_form, &app.auth, app.connection),
     };
     // Always a stack, so showing a toast does not rebuild (and reset) the
     // widget state of the content underneath.
