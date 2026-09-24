@@ -50,6 +50,7 @@ fn window_settings() -> window::Settings {
         size: Size::new(1100.0, 720.0),
         min_size: Some(Size::new(720.0, 480.0)),
         position: window::Position::Centered,
+        icon: window_icon(),
         exit_on_close_request: false,
         #[cfg(target_os = "linux")]
         platform_specific: window::settings::PlatformSpecific {
@@ -57,6 +58,26 @@ fn window_settings() -> window::Settings {
             ..Default::default()
         },
         ..window::Settings::default()
+    }
+}
+
+/// The `_T` app icon for the title bar and task bar (Wayland compositors
+/// take it from the desktop entry instead).
+fn window_icon() -> Option<window::Icon> {
+    const PNG: &[u8] = include_bytes!("../assets/icon/png/telegradus-64.png");
+    let decoded = image::load_from_memory_with_format(PNG, image::ImageFormat::Png)
+        .map_err(|error| error.to_string())
+        .and_then(|icon| {
+            let icon = icon.into_rgba8();
+            let (width, height) = icon.dimensions();
+            window::icon::from_rgba(icon.into_raw(), width, height).map_err(|e| e.to_string())
+        });
+    match decoded {
+        Ok(icon) => Some(icon),
+        Err(error) => {
+            tracing::warn!(%error, "cannot load the window icon");
+            None
+        }
     }
 }
 

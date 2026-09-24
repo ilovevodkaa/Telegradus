@@ -62,7 +62,8 @@ fn connect(mode: &Mode) -> impl Stream<Item = Message> + use<> {
                 return;
             }
         }
-        tracing::warn!("core event stream ended");
+        // The core reports every stop with `Event::Closed` first.
+        tracing::debug!("core event stream ended");
         // Never finish: a finished subscription would be restarted, and the
         // core must be started at most once per process.
         std::future::pending::<()>().await;
