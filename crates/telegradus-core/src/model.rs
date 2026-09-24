@@ -21,9 +21,14 @@ pub enum AuthState {
     Initializing,
     WaitPhoneNumber,
     /// QR login: show `link` as a QR code and wait for another device to confirm it.
-    WaitQrConfirmation { link: String },
+    WaitQrConfirmation {
+        link: String,
+    },
     WaitCode(CodeInfo),
-    WaitPassword { hint: String, has_recovery_email: bool },
+    WaitPassword {
+        hint: String,
+        has_recovery_email: bool,
+    },
     /// The phone number is not registered. Sign-up is not supported by this client.
     WaitRegistration,
     /// Email login step. Not supported by the MVP.
@@ -239,15 +244,21 @@ pub enum TextEntityKind {
     Strikethrough,
     Spoiler,
     Code,
-    Pre { language: String },
+    Pre {
+        language: String,
+    },
     Blockquote,
     /// A URL written literally in the text.
     Url,
     /// Text that links to `url`.
-    TextUrl { url: String },
+    TextUrl {
+        url: String,
+    },
     Email,
     Mention,
-    MentionName { user_id: UserId },
+    MentionName {
+        user_id: UserId,
+    },
     Hashtag,
     BotCommand,
     PhoneNumber,

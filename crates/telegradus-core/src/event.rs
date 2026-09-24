@@ -44,8 +44,14 @@ pub enum Event {
     /// An existing message changed (edited, content updated, sending failed).
     MessageUpdated(Message),
     /// A pending outgoing message was accepted by the server and got its final id.
-    MessageSent { old_id: MessageId, message: Message },
-    MessagesDeleted { chat_id: ChatId, message_ids: Vec<MessageId> },
+    MessageSent {
+        old_id: MessageId,
+        message: Message,
+    },
+    MessagesDeleted {
+        chat_id: ChatId,
+        message_ids: Vec<MessageId>,
+    },
 
     /// Download progress or completion of a file.
     FileUpdated(FileRef),

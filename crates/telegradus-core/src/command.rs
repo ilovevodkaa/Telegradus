@@ -4,7 +4,10 @@ use crate::model::{ChatId, ChatListId, FileId, MessageId};
 #[derive(Debug, Clone)]
 pub enum Command {
     /// Store `api_id`/`api_hash` in the settings file and start TDLib with them.
-    SetApiCredentials { api_id: i32, api_hash: String },
+    SetApiCredentials {
+        api_id: i32,
+        api_hash: String,
+    },
 
     SubmitPhoneNumber(String),
     /// Switch to QR-code login (from the phone-number step).
@@ -23,9 +26,15 @@ pub enum Command {
     OpenChat(ChatId),
     CloseChat(ChatId),
     /// Load the page of history before `from_message_id`.
-    LoadOlder { chat_id: ChatId, from_message_id: MessageId },
+    LoadOlder {
+        chat_id: ChatId,
+        from_message_id: MessageId,
+    },
     /// Mark messages as viewed (and read) by the user.
-    ViewMessages { chat_id: ChatId, message_ids: Vec<MessageId> },
+    ViewMessages {
+        chat_id: ChatId,
+        message_ids: Vec<MessageId>,
+    },
 
     SendText {
         chat_id: ChatId,
