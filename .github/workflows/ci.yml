@@ -75,8 +75,14 @@ jobs:
         run: cargo test -p telegradus-core --locked -- --ignored
 
       # JSON messages tell us where tdlib-rs unpacked TDLib (its OUT_DIR).
+      # API keys are baked into release builds (like official clients do), so
+      # users never have to enter them. Without the secrets (forks, first
+      # setup) they are empty and the app asks for keys on first launch.
       - name: Build release
         shell: bash
+        env:
+          TELEGRADUS_API_ID: ${{ secrets.TELEGRADUS_API_ID }}
+          TELEGRADUS_API_HASH: ${{ secrets.TELEGRADUS_API_HASH }}
         run: |
           mkdir -p target
           cargo build --release --locked -p telegradus \

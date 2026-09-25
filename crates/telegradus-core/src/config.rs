@@ -124,7 +124,7 @@ fn parse_flag(name: &str, value: &str) -> bool {
 /// Validated credentials from one source; `None` (with a warning) when the
 /// source is incomplete or invalid.
 fn credentials_from(source: Sources<'_>, origin: &str) -> Option<ApiCredentials> {
-    match (source.api_id, source.api_hash) {
+    match (present(source.api_id), present(source.api_hash)) {
         (None, None) => None,
         (Some(id), Some(hash)) => {
             let credentials = parse_api_id(id).zip(valid_api_hash(hash));
@@ -140,6 +140,11 @@ fn credentials_from(source: Sources<'_>, origin: &str) -> Option<ApiCredentials>
             None
         }
     }
+}
+
+/// Empty values mean "not set" (e.g. a CI secret that is not configured).
+fn present(value: Option<&str>) -> Option<&str> {
+    value.filter(|v| !v.trim().is_empty())
 }
 
 fn parse_api_id(value: &str) -> Option<i32> {
@@ -287,6 +292,16 @@ mod tests {
             None,
         );
         assert_eq!(config.api, None);
+    }
+
+    #[test]
+    fn empty_values_are_treated_as_unset() {
+        let compile_time = Sources {
+            api_id: Some(""),
+            api_hash: Some(""),
+        };
+        let config = resolve_with(&[], compile_time, Some(creds(7)));
+        assert_eq!(config.api, Some(creds(7)));
     }
 
     #[test]
