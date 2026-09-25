@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="_Telegradus — быстрый нативный клиент Telegram для Linux и Windows" width="100%">
+<img src="assets/banner.webp" alt="_Telegradus — быстрый нативный клиент Telegram для Linux и Windows" width="100%">
 
 <br>
 
@@ -13,6 +13,7 @@
 ![Rust](https://img.shields.io/badge/Rust-0b0b0c?style=flat-square&logo=rust&logoColor=white)
 ![Arch Linux](https://img.shields.io/badge/Arch_Linux-0b0b0c?style=flat-square&logo=archlinux&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-0b0b0c?style=flat-square&logo=windows&logoColor=white)
+![Лицензия](https://img.shields.io/badge/лицензия-GPL--3.0-74747c?style=flat-square&labelColor=0b0b0c)
 
 [Зачем](#-зачем-ещё-один-клиент) •
 [Возможности](#-возможности) •
@@ -194,39 +195,137 @@ flowchart LR
 
 ## 🔨 Сборка из исходников
 
-> [!NOTE]
-> Проект на стадии фундамента: код появится с завершением этапа 0.
-> Ниже — то, как будет выглядеть сборка.
+Нужен свежий stable Rust (1.90+). TDLib 1.8.61 по умолчанию скачивается готовой прямо во время сборки —
+CMake, gperf и долгая сборка TDLib из исходников не нужны.
 
-Для работы нужны свои `api_id` и `api_hash` — их можно получить на [my.telegram.org](https://my.telegram.org/apps).
+> [!TIP]
+> Не хочется собирать самому — свежие сборки для Linux и Windows лежат в артефактах каждого запуска
+> [CI](https://github.com/ilovevodkaa/Telegradus/actions/workflows/ci.yml).
 
 <details>
 <summary><b><img src="https://cdn.simpleicons.org/archlinux/1793D1" width="14"> Arch Linux</b></summary>
 
 ```bash
-# Зависимости
-sudo pacman -S --needed rustup base-devel cmake gperf openssl zlib
+# Зависимости: libc++ нужна готовой TDLib
+sudo pacman -S --needed rustup base-devel git libc++
 rustup default stable
 
-# Сборка
+# Сборка и запуск
 git clone https://github.com/ilovevodkaa/Telegradus.git
 cd Telegradus
-cargo build --release
+cargo run --release -p telegradus
+```
+
+Бинарник ищет `libtdjson.so.1.8.61` в своей папке, так что переносимая сборка — это два файла рядом:
+
+```bash
+mkdir -p dist
+cp target/release/telegradus dist/
+cp -L target/release/build/tdlib-rs-*/out/tdlib/lib/libtdjson.so.1.8.61 dist/
 ```
 
 </details>
 
 <details>
-<summary><b>🪟 Windows</b></summary>
+<summary><b>🪟 Windows 10 / 11</b></summary>
 
 ```powershell
-# Нужны: Rust (rustup.rs), Visual Studio Build Tools с C++, CMake
+# Нужны: Rust (rustup.rs) и Visual Studio Build Tools
+# с компонентом «Разработка классических приложений на C++»
 git clone https://github.com/ilovevodkaa/Telegradus.git
 cd Telegradus
-cargo build --release
+cargo run --release -p telegradus
 ```
 
+Для переносимой папки положи рядом с `telegradus.exe` все DLL из TDLib — `tdjson.dll`, OpenSSL и zlib:
+
+```powershell
+New-Item -ItemType Directory -Force dist | Out-Null
+Copy-Item target\release\telegradus.exe dist\
+Copy-Item target\release\build\tdlib-rs-*\out\tdlib\bin\*.dll dist\
+```
+
+На чистой системе может понадобиться [Visual C++ Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
+
 </details>
+
+### 🔑 Ключи API
+
+Каждому клиенту Telegram нужны свои `api_id` и `api_hash`: войди на [my.telegram.org](https://my.telegram.org/apps),
+открой **API development tools** и создай приложение. Передать ключи можно тремя способами — в порядке приоритета:
+
+| Способ | Как |
+|---|---|
+| При запуске | переменные окружения `TELEGRADUS_API_ID` и `TELEGRADUS_API_HASH` |
+| При сборке | те же переменные во время `cargo build` — ключи зашиваются в бинарник |
+| В приложении | ничего не задавать: Telegradus спросит ключи при первом запуске и запомнит их |
+
+```bash
+TELEGRADUS_API_ID=1234567 TELEGRADUS_API_HASH=0123456789abcdef0123456789abcdef cargo run --release -p telegradus
+```
+
+```powershell
+$env:TELEGRADUS_API_ID = "1234567"; $env:TELEGRADUS_API_HASH = "0123456789abcdef0123456789abcdef"
+cargo run --release -p telegradus
+```
+
+> [!WARNING]
+> Зашитые при сборке ключи легко достать из бинарника — не раздавай такие сборки.
+
+### 📦 Откуда берётся TDLib
+
+| Фича | Что делает |
+|---|---|
+| `download-tdlib` *(по умолчанию)* | скачивает готовую TDLib из релизов [tdlib-rs](https://github.com/FedericoBruzzone/tdlib-rs/releases) |
+| `local-tdlib` | берёт TDLib из папки `LOCAL_TDLIB_PATH`: внутри `lib/` и `include/`, на Windows ещё `bin/` |
+| `pkg-config` | использует системную TDLib, найденную через `pkg-config` |
+
+```bash
+# Своя сборка TDLib из папки
+LOCAL_TDLIB_PATH=$HOME/tdlib cargo build --release -p telegradus --no-default-features --features local-tdlib
+
+# Системная TDLib; если она стоит не в /usr, добавь её lib/pkgconfig в PKG_CONFIG_PATH и lib в LD_LIBRARY_PATH
+cargo build --release -p telegradus --no-default-features --features pkg-config
+```
+
+> [!IMPORTANT]
+> Нужна ровно TDLib **1.8.61**: привязки tdlib-rs сгенерированы под схему именно этой версии.
+> С другой версией клиент может собраться, но начнёт ломаться уже во время работы.
+
+### 🧪 Демо-режим
+
+```bash
+cargo run -p telegradus --features demo -- --demo
+```
+
+Интерфейс на вымышленных чатах: без входа в аккаунт и без обращения к Telegram.
+Удобно, чтобы посмотреть на клиент или поработать над интерфейсом.
+
+### 📂 Данные и переменные окружения
+
+| | Linux | Windows |
+|---|---|---|
+| 📁 Папка данных | `~/.local/share/telegradus` | `%APPDATA%\Telegradus\data` |
+
+В ней лежат база TDLib, скачанные файлы, `settings.json` с ключами API и лог `tdlib.log`
+(до 10 МБ, только ошибки и предупреждения).
+
+| Переменная | Что делает |
+|---|---|
+| `TELEGRADUS_API_ID`, `TELEGRADUS_API_HASH` | ключи API — при запуске или при сборке |
+| `TELEGRADUS_DATA_DIR` | своя папка данных вместо стандартной, например для второго аккаунта |
+| `TELEGRADUS_TEST_DC=1` | тестовые серверы Telegram: отдельная база аккаунтов для разработки |
+| `LOCAL_TDLIB_PATH` | папка с TDLib для фичи `local-tdlib`, только при сборке |
+
+### ✅ Перед пул-реквестом
+
+```bash
+cargo fmt --all
+cargo clippy --workspace --all-targets --features telegradus/demo -- -D warnings
+cargo test --workspace
+```
+
+То же самое проверяет CI на Linux и Windows.
 
 ## ❓ FAQ
 
@@ -262,6 +361,12 @@ Electron тащит с собой целый Chromium и легко съедае
 
 Проект только начинается — самое время присоединиться! Идеи, баг-репорты и пул-реквесты приветствуются
 в [Issues](https://github.com/ilovevodkaa/Telegradus/issues).
+
+## 📄 Лицензия
+
+Telegradus распространяется под лицензией [GNU GPL v3.0](LICENSE).
+Можно свободно использовать, изучать, изменять и распространять код — при условии, что производные работы
+тоже остаются открытыми под GPL-3.0.
 
 ---
 

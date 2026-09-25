@@ -1,0 +1,40 @@
+[package]
+name = "telegradus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Fast, low-memory native Telegram desktop client"
+
+[features]
+default = ["download-tdlib"]
+download-tdlib = ["telegradus-core/download-tdlib"]
+local-tdlib = ["telegradus-core/local-tdlib"]
+pkg-config = ["telegradus-core/pkg-config"]
+# In-app fake core with canned data, enabled at runtime with `--demo[=<screen>]`.
+demo = []
+
+[dependencies]
+telegradus-core.workspace = true
+iced = { workspace = true, features = [
+    "wgpu",
+    "tiny-skia",
+    "tokio",
+    "image-without-codecs",
+    "qr_code",
+    "canvas",
+    "advanced",
+    "crisp",
+    "web-colors",
+    "linux-theme-detection",
+    "x11",
+    "wayland",
+    "thread-pool",
+] }
+# Only the codecs Telegram media actually uses (photos and avatars are JPEG).
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+tokio = { workspace = true, features = ["rt", "sync", "time"] }
+tracing.workspace = true
+tracing-subscriber = { version = "0.3", default-features = false, features = ["std", "fmt", "ansi", "env-filter"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+opener = "0.8"

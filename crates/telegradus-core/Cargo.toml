@@ -1,0 +1,19 @@
+[package]
+name = "telegradus-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+default = ["download-tdlib"]
+download-tdlib = ["tdlib-rs/download-tdlib"]
+local-tdlib = ["tdlib-rs/local-tdlib"]
+pkg-config = ["tdlib-rs/pkg-config"]
+
+[dependencies]
+tdlib-rs.workspace = true
+tokio = { workspace = true, features = ["rt", "sync", "macros", "time"] }
+tracing.workspace = true
+directories = "6"
+serde_json = "1"

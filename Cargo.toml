@@ -1,0 +1,31 @@
+[workspace]
+resolver = "2"
+members = ["crates/telegradus-core", "crates/telegradus"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+license = "GPL-3.0-only"
+repository = "https://github.com/ilovevodkaa/Telegradus"
+
+[workspace.dependencies]
+telegradus-core = { path = "crates/telegradus-core", default-features = false }
+# Pinned: each tdlib-rs release bundles a different TDLib version, and CI and
+# packaging expect the TDLib 1.8.61 library file names.
+tdlib-rs = "=1.4.0"
+iced = { version = "0.14", default-features = false }
+tokio = { version = "1", default-features = false }
+tracing = "0.1"
+
+# Debug builds: our crates stay quick to rebuild, while dependencies (iced,
+# wgpu, image decoders, TDLib bindings) are optimized once so the UI is smooth.
+[profile.dev.package."*"]
+opt-level = 2
+
+# Small, fast release binary. Panics still unwind (the default).
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
